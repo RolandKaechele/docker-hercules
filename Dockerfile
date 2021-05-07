@@ -6,14 +6,17 @@
 FROM --platform=${TARGETPLATFORM:-linux/arm/v6} debian:buster-slim AS build_hercules
 
 # Set this to "classic" or "renewal" to build the relevant server version (default: classic).
-ARG HERCULES_SERVER_MODE=classic
+ARG HERCULES_SERVER_MODE=renewal
 
 # Set this to a YYYYMMDD date string to build a server for a specific packet version.
 # Set HERCULES_PACKET_VERSION to "latest" to build the server for the packet version
 # defined in the Hercules code base as the current supported version.
 # As a recommended alternative, the "Noob Pack" client download available on the
 # Hercules forums is using the packet version 20180418.
-ARG HERCULES_PACKET_VERSION=latest
+ARG HERCULES_PACKET_VERSION=20180418
+
+ARG BUILD_DATE
+LABEL build_version="Hercule-${HERCULES_SERVER_NAME}:{PACKETVER_FROM_SOURCE}  build-date: ${BUILD_DATE}"
 
 # You can pass in any further command line options for the build with the HERCULES_BUILD_OPTS
 # build argument.
@@ -67,9 +70,11 @@ RUN \
   # libmysqlclient20 \
   libmariadbclient-dev \
   libmariadb-dev-compat \
-  python3-pip \
-  && rm -rf /var/lib/apt/lists/*
+  python3-pip
 RUN useradd --no-log-init -r hercules
+
+# change root password
+RUN echo 'root:Docker!' |chpasswd
 
 # Install Autolycus dependencies - we're doing this as a separate step
 # to optimise build cache usage. Docker will cache the image with the
